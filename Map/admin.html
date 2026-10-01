@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Friend Map — Admin</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f6f9; min-height: 100vh; }
+
+    /* Login */
+    .login-screen {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh;
+    }
+    .login-box {
+      background: white; border-radius: 16px; padding: 36px;
+      width: 320px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .login-box h2 { color: #e74c3c; font-size: 20px; }
+    .login-box p { color: #777; font-size: 13px; }
+    .login-box input {
+      padding: 12px; border: 1px solid #ddd; border-radius: 10px;
+      font-size: 15px; outline: none; text-align: center;
+    }
+    .login-box input:focus { border-color: #e74c3c; }
+    .login-box button {
+      background: #e74c3c; color: white; border: none; padding: 13px;
+      border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .login-box button:hover { background: #c0392b; }
+    .error-msg { color: #e74c3c; font-size: 13px; display: none; }
+
+    /* Admin panel */
+    .admin-screen { display: none; padding: 24px; max-width: 700px; margin: 0 auto; }
+    .admin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .admin-header h1 { color: #e74c3c; font-size: 22px; }
+    .admin-header span { color: #aaa; font-size: 13px; }
+
+    .stats-row {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .stat-box {
+      flex: 1; background: white; border-radius: 12px; padding: 16px;
+      text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-num { font-size: 28px; font-weight: 700; color: #1D9E75; }
+    .stat-label { font-size: 12px; color: #aaa; margin-top: 4px; }
+    .stat-num.red { color: #e74c3c; }
+    .stat-num.gray { color: #aaa; }
+
+    .user-list { display: flex; flex-direction: column; gap: 10px; }
+    .user-card {
+      background: white; border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .u-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: bold; color: white; flex-shrink: 0;
+    }
+    .u-info { flex: 1; }
+    .u-name { font-size: 15px; font-weight: 600; color: #222; }
+    .u-id { font-size: 11px; color: #aaa; margin-top: 2px; font-family: monospace; }
+    .u-meta { font-size: 12px; color: #888; margin-top: 3px; }
+    .u-status {
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .u-status.free { background: #e8f8f2; color: #1D9E75; }
+    .u-status.busy { background: #fdecea; color: #e74c3c; }
+    .u-status.offline { background: #f0f0f0; color: #aaa; }
+
+    .del-btn {
+      background: white; color: #e74c3c; border: 1.5px solid #e74c3c;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .del-btn:hover { background: #e74c3c; color: white; }
+
+    .empty { text-align: center; color: #aaa; padding: 40px; font-size: 15px; }
+    .loading { text-align: center; color: #aaa; padding: 40px; }
+
+    .refresh-btn {
+      background: white; color: #1D9E75; border: 1.5px solid #1D9E75;
+      padding: 8px 16px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer;
+    }
+    .refresh-btn:hover { background: #f0faf6; }
+  </style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <h2>🔒 Admin Panel</h2>
+      <p>Friend Map — Admin Access</p>
+      <input type="password" id="admin-pass" placeholder="Enter admin password..." />
+      <button id="login-btn">Login</button>
+      <div class="error-msg" id="error-msg">Wrong password. Try again.</div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-screen" id="admin-screen">
+    <div class="admin-header">
+      <h1>🗺️ Friend Map Admin</h1>
+      <button class="refresh-btn" id="refresh-btn">↻ Refresh</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-free">—</div>
+        <div class="stat-label">Free</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num red" id="stat-busy">—</div>
+        <div class="stat-label">Busy</div>
+      </div>
+    </div>
+
+    <div class="user-list" id="user-list">
+      <div class="loading">Loading users...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCiUtZj7Hit_IwUBDpd7f2Wmk_iy5kXCjs",
+      authDomain: "friend-map-37021.firebaseapp.com",
+      projectId: "friend-map-37021",
+      storageBucket: "friend-map-37021.firebasestorage.app",
+      messagingSenderId: "742437106864",
+      appId: "1:742437106864:web:b6c568aa1f8490e8a8b775"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ── Change this password ──────────────────────────
+    const ADMIN_PASSWORD = "friendmap2025";
+    // ─────────────────────────────────────────────────
+
+    const colors = ["#534AB7", "#0F6E56", "#993C1D", "#993556", "#185FA5"];
+
+    document.getElementById("admin-pass").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("login-btn").click();
+    });
+
+    document.getElementById("login-btn").addEventListener("click", () => {
+      const pass = document.getElementById("admin-pass").value;
+      if (pass === ADMIN_PASSWORD) {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("admin-screen").style.display = "block";
+        loadUsers();
+      } else {
+        document.getElementById("error-msg").style.display = "block";
+      }
+    });
+
+    document.getElementById("refresh-btn").addEventListener("click", loadUsers);
+
+    function loadUsers() {
+      const list = document.getElementById("user-list");
+      list.innerHTML = '<div class="loading">Loading...</div>';
+
+      const usersRef = collection(db, "users");
+      onSnapshot(usersRef, (snapshot) => {
+        list.innerHTML = "";
+
+        if (snapshot.empty) {
+          list.innerHTML = '<div class="empty">No active users on the map.</div>';
+          document.getElementById("stat-total").textContent = 0;
+          document.getElementById("stat-free").textContent = 0;
+          document.getElementById("stat-busy").textContent = 0;
+          return;
+        }
+
+        let freeCount = 0, busyCount = 0;
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const userId = docSnap.id;
+          const status = data.status || "offline";
+          if (status === "free") freeCount++;
+          if (status === "busy") busyCount++;
+
+          const colorIndex = Math.abs(userId.charCodeAt(0)) % colors.length;
+          const avatarColor = colors[colorIndex];
+          const initial = data.name ? data.name.charAt(0).toUpperCase() : "?";
+
+          const updatedAt = data.updatedAt
+            ? new Date(data.updatedAt).toLocaleString()
+            : "Unknown";
+
+          const card = document.createElement("div");
+          card.className = "user-card";
+          card.innerHTML =
+            `<div class="u-avatar" style="background:${avatarColor}">${initial}</div>` +
+            `<div class="u-info">` +
+              `<div class="u-name">${data.name || "Unknown"}</div>` +
+              `<div class="u-id">${userId}</div>` +
+              `<div class="u-meta">📍 ${data.lat?.toFixed(4)}, ${data.lng?.toFixed(4)} &nbsp;·&nbsp; 🕐 ${updatedAt}</div>` +
+            `</div>` +
+            `<span class="u-status ${status}">${status}</span>` +
+            `<button class="del-btn" data-id="${userId}">Delete</button>`;
+
+          card.querySelector(".del-btn").addEventListener("click", async () => {
+            if (!confirm(`Delete user "${data.name}"?\nID: ${userId}`)) return;
+            try {
+              await deleteDoc(doc(db, "users", userId));
+            } catch (e) {
+              alert("Error deleting user: " + e.message);
+            }
+          });
+
+          list.appendChild(card);
+        });
+
+        document.getElementById("stat-total").textContent = snapshot.size;
+        document.getElementById("stat-free").textContent = freeCount;
+        document.getElementById("stat-busy").textContent = busyCount;
+      });
+    }
+  </script>
+</body>
+</html>

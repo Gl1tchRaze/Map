@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Friend Map</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1D9E75" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Friend Map" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body>
+
+    <!-- Name Modal -->
+    <div class="modal-overlay" id="modal">
+      <div class="modal">
+        <h2>Welcome to Friend Map!</h2>
+        <p>Enter your name to get started</p>
+        <input type="text" id="name-input" placeholder="Your name..." maxlength="20" />
+        <button id="name-btn">Start</button>
+      </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal-overlay" id="logout-modal" style="display:none">
+      <div class="modal">
+        <h2 style="color:#e74c3c">Log out?</h2>
+        <p>Your location will be removed from the map.</p>
+        <div style="display:flex;gap:10px">
+          <button id="logout-cancel" style="background:white;color:#555;border:1.5px solid #ddd;flex:1">Cancel</button>
+          <button id="logout-confirm" style="background:#e74c3c;flex:2">Log out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favorite Spot Modal -->
+    <div class="modal-overlay" id="fav-modal" style="display:none">
+      <div class="modal">
+        <h2>⭐ Save Favorite Spot</h2>
+        <p>Give this location a name</p>
+        <input type="hidden" id="fav-lat" />
+        <input type="hidden" id="fav-lng" />
+        <input type="text" id="fav-name-input" placeholder="e.g. Home, Café, Park..." maxlength="30" />
+        <div style="display:flex;gap:10px">
+          <button id="fav-cancel-btn" style="background:white;color:#555;border:1.5px solid #ddd;flex:1">Cancel</button>
+          <button id="fav-save-btn" style="flex:2">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="main-app" style="display:none">
+      <div class="sidebar">
+        <h2>Friend Map</h2>
+
+        <!-- My status -->
+        <div class="my-status-box">
+          <div class="avatar-large" id="my-avatar">?</div>
+          <div>
+            <div class="friend-name" id="my-name">...</div>
+            <div class="friend-status" id="my-status-text">Offline</div>
+          </div>
+        </div>
+
+        <button id="free-btn">I'm Free!</button>
+        <button id="busy-btn">I'm Busy</button>
+
+        <!-- Auto-expire panel -->
+        <div id="expire-panel" style="display:none">
+          <div class="section-label">⏰ Auto-remove after</div>
+          <div class="expire-row">
+            <button class="expire-btn" data-hours="1">1h</button>
+            <button class="expire-btn" data-hours="3">3h</button>
+            <button class="expire-btn" data-hours="8">8h</button>
+          </div>
+        </div>
+
+        <!-- Privacy control -->
+        <div class="privacy-row">
+          <span class="section-label">🛡️ Privacy</span>
+          <select id="privacy-select">
+            <option value="precise">Precise</option>
+            <option value="fuzzy">Fuzzy (~500m)</option>
+            <option value="hidden">Hidden</option>
+          </select>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Friends -->
+        <h3>Friends</h3>
+        <div id="friend-list"></div>
+
+        <div class="divider"></div>
+
+        <!-- Favorite spots -->
+        <h3>⭐ Favorites <span class="hint">right-click map to add</span></h3>
+        <div id="fav-list"></div>
+
+        <div style="flex:1"></div>
+        <button id="logout-btn">⏻ Log Out</button>
+      </div>
+
+      <div class="map-section">
+        <div id="map"></div>
+        <div class="notification" id="notification"></div>
+      </div>
+    </div>
+    <!-- Chat Toggle Button -->
+<button class="chat-toggle" id="chat-toggle">
+  💬
+  <span class="chat-badge" style="display:none">!</span>
+</button>
+
+<!-- Chat Panel -->
+<div class="chat-panel" id="chat-panel" style="display:none">
+  <div class="chat-header">
+    <span>Group Chat</span>
+    <button id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200" />
+    <button id="chat-send">Send</button>
+  </div>
+</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
